@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { exists, readConfig } from "../memory/sutraStore.js";
 import { ensureSyncedWithRemote, getCurrentBranch, getFullProjectSnapshot, getStagedDiff, hasCommits, hasUncommittedChanges, isGitRepository, pushWithRetry, stageAllChanges } from "../utils/git.js";
-import { execSync, spawnSync } from "child_process";
+import { spawnSync } from "child_process";
 import inquirer from "inquirer";
 import { analyzeAndGenerateCommit } from "../ai/commitAnalyzer.js";
 import { formatMessage } from "../utils/formatMessage.js";
