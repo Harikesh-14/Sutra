@@ -91,7 +91,7 @@ import { formatMessage } from "../utils/formatMessage.js";
 //   }
 
 //   // 6. Commit
-//   execSync(`git commit -m "${formatMessage(aiMessage.message, aiMessage.type, aiMessage.scope)}"`, { stdio: "inherit" })
+//   execSync(`git commit -m "${formatMessage(aiMessage.message, aiMessage.type, aiMessage.scope)}"`)
 
 //   // 7. Push
 //   pushWithRetry(branch)
@@ -113,7 +113,7 @@ export async function commitCommand() {
 
   const config = readConfig();
   const repoHasCommits = hasCommits();
-  const branch = config.BRANCH_NAME; // ← Always trust config
+  const branch = config.BRANCH_NAME;
 
   // Validate branch only if commits exist
   if (repoHasCommits) {
@@ -163,7 +163,7 @@ export async function commitCommand() {
     { isInitialCommit: !repoHasCommits }
   );
 
-  const finalMessage = formatMessage(
+  let finalMessage = formatMessage(
     aiMessage.message,
     aiMessage.type,
     aiMessage.scope
@@ -173,24 +173,57 @@ export async function commitCommand() {
   console.log(chalk.cyan(finalMessage));
 
   // 4. Confirm
-  const { confirm } = await inquirer.prompt([
-    {
-      type: "confirm",
-      name: "confirm",
-      message: "Do you want to use this commit message?",
-      default: true
-    }
-  ]);
+  // const { confirm } = await inquirer.prompt([
+  //   {
+  //     type: "confirm",
+  //     name: "confirm",
+  //     message: "Do you want to use this commit message?",
+  //     default: true
+  //   }
+  // ]);
 
-  if (!confirm) {
-    console.log(chalk.red("⛓️‍💥 Commit aborted."));
+  // if (!confirm) {
+  //   console.log(chalk.red("⛓️‍💥 Commit aborted."));
+  //   process.exit(0);
+  // }
+
+  const { confirm } = await inquirer.prompt([{
+    type: "select",
+    name: "confirm",
+    message: "Do you want to use this commit message?",
+    choices: [
+      { name: "Yes, commit and push", value: "yes" },
+      { name: "No, edit message", value: "edit" },
+      { name: "No, abort commit", value: "no" }
+    ],
+    default: "yes"
+  }]);
+
+  if (confirm === "no") {
+    console.log(chalk.red("⛓️‍💥 Commit aborted."))
     process.exit(0);
   }
 
+  if (confirm === "edit") {
+    const { editedMessage } = await inquirer.prompt([
+      {
+        type: "input",
+        name: "editedMessage",
+        message: "Edit your commit message:",
+        default: finalMessage
+      }
+    ]);
+
+    if (!editedMessage.trim()) {
+      console.log(chalk.red("⚠️ Commit message cannot be empty. Aborting."));
+      process.exit(1);
+    }
+
+    finalMessage = editedMessage.trim();
+  }
+
   // 5. Commit safely (escape quotes)
-  const commitResult = spawnSync("git", ["commit", "-m", finalMessage], {
-    stdio: "inherit"
-  });
+  const commitResult = spawnSync("git", ["commit", "-m", finalMessage]);
 
   if (commitResult.status !== 0) {
     console.log(chalk.red("⚠️ Git commit failed. Please check the error message above."));

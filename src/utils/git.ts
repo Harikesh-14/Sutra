@@ -44,7 +44,7 @@ export function isGitRepository(): boolean {
 
 export function hasCommits(): boolean {
   try {
-    execSync("git rev-parse HEAD", { stdio: "ignore" });
+    execSync("git rev-parse HEAD");
     return true
   } catch {
     return false
@@ -69,11 +69,11 @@ export function stageAllChanges(): void {
 }
 
 export function commitChanges(message: string): void {
-  execSync(`git commit -m "${message}"`, { stdio: "inherit" })
+  execSync(`git commit -m "${message}"`)
 }
 
 export function pushChanges(): void {
-  execSync(`git push -u origin ${getCurrentBranch()}`, { stdio: "inherit" })
+  execSync(`git push -u origin ${getCurrentBranch()}`)
 }
 
 export function getStagedDiff(): string {
@@ -97,7 +97,7 @@ export function getUnstagedDiff(): string {
 // TODO: Read from here
 export function fetchRemote(branch: string): void {
   console.log(chalk.blue(`📡 Fetching latest changes from remote for branch '${branch}'...`))
-  execSync(`git fetch origin ${branch}`, { stdio: "inherit" })
+  execSync(`git fetch origin ${branch}`)
 }
 
 export function getAheadBehind(branch: string): { ahead: number; behind: number } {
@@ -120,7 +120,7 @@ export function getAheadBehind(branch: string): { ahead: number; behind: number 
 function rebaseOntoRemote(branch: string) {
   console.log(chalk.blue(`⬇️ Rebasing onto origin/${branch}...`));
   try {
-    execSync(`git rebase origin/${branch}`, { stdio: "inherit" });
+    execSync(`git rebase origin/${branch}`);
   } catch (error) {
     console.log(
       chalk.red(
@@ -160,7 +160,7 @@ export function ensureSyncedWithRemote(branch: string) {
 
 export function pushWithRetry(branch: string) {
   try {
-    execSync(`git push -u origin ${branch}`, { stdio: "inherit" });
+    execSync(`git push -u origin ${branch}`);
   } catch (error: any) {
     console.log(chalk.yellow("⚠️ Push rejected. Attempting to sync and retry..."));
 
@@ -168,7 +168,7 @@ export function pushWithRetry(branch: string) {
 
     try {
       rebaseOntoRemote(branch);
-      execSync(`git push -u origin ${branch}`, { stdio: "inherit" });
+      execSync(`git push -u origin ${branch}`);
     } catch {
       console.log(
         chalk.red(

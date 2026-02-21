@@ -24,15 +24,15 @@ export async function initCommand() {
     } catch (error: any) {
       console.log(chalk.yellow("⚠️ Git detected but failed to read details."))
         ; ({ repo, branch } = await promptUserForConfig())
-      execSync(`git remote add origin ${repo}`, { stdio: "inherit" })
-      execSync(`git checkout -B ${branch}`, { stdio: "inherit" })
+      execSync(`git remote add origin ${repo}`)
+      execSync(`git checkout -B ${branch}`)
     }
   } else {
     console.log(chalk.yellow("⚠️ Git repository not detected."))
       ; ({ repo, branch } = await promptUserForConfig())
-    execSync("git init", { stdio: "inherit" })
-    execSync(`git remote add origin ${repo}`, { stdio: "inherit" })
-    execSync(`git checkout -b ${branch}`, { stdio: "inherit" })
+    execSync("git init")
+    execSync(`git remote add origin ${repo}`)
+    execSync(`git checkout -b ${branch}`)
   }
 
   const config = createDefaultConfig(repo, branch)
