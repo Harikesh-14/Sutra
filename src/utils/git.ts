@@ -132,6 +132,27 @@ function rebaseOntoRemote(branch: string) {
 }
 
 export function ensureSyncedWithRemote(branch: string) {
+  // 1️⃣ Ensure remote 'origin' exists
+  try {
+    execSync("git remote get-url origin", { stdio: "ignore" });
+  } catch {
+    console.log(
+      chalk.yellow("⚠️ No remote 'origin' found. Skipping sync.")
+    );
+    return;
+  }
+
+  // 2️⃣ Ensure remote branch exists
+  if (!remoteBranchExists(branch)) {
+    console.log(
+      chalk.yellow(
+        `⚠️ Remote branch '${branch}' does not exist yet. Skipping sync (first push).`
+      )
+    );
+    return;
+  }
+
+  // 3️⃣ Safe to fetch
   fetchRemote(branch);
 
   const { ahead, behind } = getAheadBehind(branch);
@@ -160,15 +181,24 @@ export function ensureSyncedWithRemote(branch: string) {
 
 export function pushWithRetry(branch: string) {
   try {
-    execSync(`git push -u origin ${branch}`);
-  } catch (error: any) {
+    execSync(`git push -u origin ${branch}`, { stdio: "inherit" });
+  } catch {
     console.log(chalk.yellow("⚠️ Push rejected. Attempting to sync and retry..."));
+
+    if (!remoteBranchExists(branch)) {
+      console.log(
+        chalk.yellow("Remote branch missing. Retrying push without sync...")
+      );
+
+      execSync(`git push -u origin ${branch}`, { stdio: "inherit" });
+      return;
+    }
 
     fetchRemote(branch);
 
     try {
       rebaseOntoRemote(branch);
-      execSync(`git push -u origin ${branch}`);
+      execSync(`git push -u origin ${branch}`, { stdio: "inherit" });
     } catch {
       console.log(
         chalk.red(
@@ -177,5 +207,16 @@ export function pushWithRetry(branch: string) {
       );
       process.exit(1);
     }
+  }
+}
+
+export function remoteBranchExists(branch: string): boolean {
+  try {
+    execSync(`git ls-remote --exit-code --heads origin ${branch}`, {
+      stdio: "ignore",
+    });
+    return true;
+  } catch {
+    return false;
   }
 }
